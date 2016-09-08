@@ -288,6 +288,8 @@ $(info [CONFIG] AR origin: $(origin AR) -> $(AR_DEF))
 $(info [CONFIG] STRIP origin: $(origin STRIP) -> $(STRIP))
 $(info [CONFIG] RANLIB origin: $(origin RANLIB) -> $(RANLIB))
 endif
+
+# Setting CC and CXX configuration if not set
 ifeq ($(origin CC), default)
 CC = $(CC_$(CONFIG))
 endif
@@ -1828,6 +1830,8 @@ buildbenchmarks: privatelibs $(BINDIR)/$(CONFIG)/low_level_ping_pong_benchmark
 
 benchmarks: buildbenchmarks
 
+# STRIPPING
+
 strip: strip-static strip-shared
 
 strip-static: strip-static_c strip-static_cxx
@@ -1912,6 +1916,8 @@ $(LIBDIR)/$(CONFIG)/pkgconfig/grpc++_unsecure.pc:
 	$(E) "[MAKE]    Generating $@"
 	$(Q) mkdir -p $(@D)
 	$(Q) echo "$(GRPCXX_UNSECURE_PC_FILE)" | tr , '\n' >$@
+
+# PROTOC GENERATION
 
 ifeq ($(NO_PROTOC),true)
 $(GENDIR)/src/proto/grpc/lb/v1/load_balancer.pb.cc: protoc_dep_error
@@ -2121,6 +2127,8 @@ $(GENDIR)/src/core/profiling/stap_probes.h: systemtap_dep_error stop
 endif
 endif
 
+# COMPILATION
+
 $(OBJDIR)/$(CONFIG)/%.o : %.c
 	$(E) "[C]       Compiling $<"
 	$(Q) mkdir -p `dirname $@`
@@ -2140,6 +2148,8 @@ $(OBJDIR)/$(CONFIG)/%.o : %.cc
 	$(E) "[CXX]     Compiling $<"
 	$(Q) mkdir -p `dirname $@`
 	$(Q) $(CXX) -I$(BOSP_INCLUDE_DIR) -I$(BOSP_INCLUDE_DIR)/third_party/protobuf/src $(CPPFLAGS) $(CXXFLAGS) -MMD -MF $(addsuffix .dep, $(basename $@)) -c -o $@ $<
+
+# INSTALLATION
 
 install: install_c install_cxx install-plugins install-certs verify-install
 
@@ -2351,10 +2361,10 @@ clean:
 	$(E) "[CLEAN]   Cleaning build directories."
 	$(Q) $(RM) -rf $(OBJDIR) $(LIBDIR) $(BINDIR) $(GENDIR) cache.mk
 
-
+# LIBRARIES CREATION
 # The various libraries
 
-
+# Libgpr.a
 LIBGPR_SRC = \
     src/core/lib/profiling/basic_timers.c \
     src/core/lib/profiling/stap_timers.c \
@@ -2506,6 +2516,7 @@ ifneq ($(NO_DEPS),true)
 -include $(LIBGPR_TEST_UTIL_OBJS:.o=.dep)
 endif
 
+#Libgrpc.a
 
 LIBGRPC_SRC = \
     src/core/lib/surface/init.c \
@@ -2778,7 +2789,7 @@ ifneq ($(NO_DEPS),true)
 endif
 endif
 
-
+#Libgrpc_cronet.a
 LIBGRPC_CRONET_SRC = \
     src/core/lib/surface/init.c \
     src/core/lib/channel/channel_args.c \
@@ -3027,7 +3038,7 @@ ifneq ($(NO_DEPS),true)
 endif
 endif
 
-
+#Libgrpc_test_util.a
 LIBGRPC_TEST_UTIL_SRC = \
     test/core/end2end/data/client_certs.c \
     test/core/end2end/data/server1_cert.c \
@@ -3082,7 +3093,7 @@ ifneq ($(NO_DEPS),true)
 endif
 endif
 
-
+#Libgrpc_test_util_unsecure.a
 LIBGRPC_TEST_UTIL_UNSECURE_SRC = \
     test/core/end2end/cq_verifier.c \
     test/core/end2end/fixtures/proxy.c \
@@ -3118,7 +3129,7 @@ ifneq ($(NO_DEPS),true)
 -include $(LIBGRPC_TEST_UTIL_UNSECURE_OBJS:.o=.dep)
 endif
 
-
+#Libgrpc_unsecure.a
 LIBGRPC_UNSECURE_SRC = \
     src/core/lib/surface/init.c \
     src/core/lib/surface/init_unsecure.c \
@@ -3344,7 +3355,7 @@ ifneq ($(NO_DEPS),true)
 -include $(LIBGRPC_UNSECURE_OBJS:.o=.dep)
 endif
 
-
+#Libreconnect_server.a
 LIBRECONNECT_SERVER_SRC = \
     test/core/util/reconnect_server.c \
 
@@ -3383,7 +3394,7 @@ ifneq ($(NO_DEPS),true)
 endif
 endif
 
-
+#Libtest_tcp_server.a
 LIBTEST_TCP_SERVER_SRC = \
     test/core/util/test_tcp_server.c \
 
@@ -3422,7 +3433,7 @@ ifneq ($(NO_DEPS),true)
 endif
 endif
 
-
+#Libgrpc++.a
 LIBGRPC++_SRC = \
     src/cpp/client/secure_credentials.cc \
     src/cpp/common/auth_property_iterator.cc \
@@ -3620,7 +3631,7 @@ ifneq ($(NO_DEPS),true)
 endif
 endif
 
-
+#Libgrpc++_reflection.a
 LIBGRPC++_REFLECTION_SRC = \
     src/cpp/ext/proto_server_reflection.cc \
     src/cpp/ext/proto_server_reflection_plugin.cc \
@@ -3747,7 +3758,7 @@ ifneq ($(NO_DEPS),true)
 endif
 endif
 
-
+#Libgrpc++_test_config.a
 LIBGRPC++_TEST_CONFIG_SRC = \
     test/cpp/util/test_config.cc \
 
@@ -3796,7 +3807,7 @@ ifneq ($(NO_DEPS),true)
 endif
 endif
 
-
+#Libgrpc++_test_util.a
 LIBGRPC++_TEST_UTIL_SRC = \
     $(GENDIR)/src/proto/grpc/testing/echo_messages.pb.cc $(GENDIR)/src/proto/grpc/testing/echo_messages.grpc.pb.cc \
     $(GENDIR)/src/proto/grpc/testing/echo.pb.cc $(GENDIR)/src/proto/grpc/testing/echo.grpc.pb.cc \
@@ -3914,7 +3925,7 @@ $(OBJDIR)/$(CONFIG)/test/cpp/util/subprocess.o: $(GENDIR)/src/proto/grpc/testing
 $(OBJDIR)/$(CONFIG)/test/cpp/util/test_credentials_provider.o: $(GENDIR)/src/proto/grpc/testing/echo_messages.pb.cc $(GENDIR)/src/proto/grpc/testing/echo_messages.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/echo.pb.cc $(GENDIR)/src/proto/grpc/testing/echo.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/duplicate/echo_duplicate.pb.cc $(GENDIR)/src/proto/grpc/testing/duplicate/echo_duplicate.grpc.pb.cc
 $(OBJDIR)/$(CONFIG)/src/cpp/codegen/codegen_init.o: $(GENDIR)/src/proto/grpc/testing/echo_messages.pb.cc $(GENDIR)/src/proto/grpc/testing/echo_messages.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/echo.pb.cc $(GENDIR)/src/proto/grpc/testing/echo.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/duplicate/echo_duplicate.pb.cc $(GENDIR)/src/proto/grpc/testing/duplicate/echo_duplicate.grpc.pb.cc
 
-
+#Libgrpc++_unsecure.a
 LIBGRPC++_UNSECURE_SRC = \
     src/cpp/common/insecure_create_auth_context.cc \
     src/cpp/client/channel.cc \
@@ -4093,7 +4104,7 @@ ifneq ($(NO_DEPS),true)
 -include $(LIBGRPC++_UNSECURE_OBJS:.o=.dep)
 endif
 
-
+#Libgrpc_cli_libs.a
 LIBGRPC_CLI_LIBS_SRC = \
     test/cpp/util/cli_call.cc \
     test/cpp/util/proto_file_parser.cc \
@@ -4143,7 +4154,7 @@ ifneq ($(NO_DEPS),true)
 endif
 endif
 
-
+#Libgrpc_plugin_support.a
 LIBGRPC_PLUGIN_SUPPORT_SRC = \
     src/compiler/cpp_generator.cc \
     src/compiler/csharp_generator.cc \
@@ -4185,7 +4196,7 @@ ifneq ($(NO_DEPS),true)
 -include $(LIBGRPC_PLUGIN_SUPPORT_OBJS:.o=.dep)
 endif
 
-
+#Libinterop_client_helper.a
 LIBINTEROP_CLIENT_HELPER_SRC = \
     $(GENDIR)/src/proto/grpc/testing/messages.pb.cc $(GENDIR)/src/proto/grpc/testing/messages.grpc.pb.cc \
     test/cpp/interop/client_helper.cc \
@@ -4236,7 +4247,7 @@ endif
 endif
 $(OBJDIR)/$(CONFIG)/test/cpp/interop/client_helper.o: $(GENDIR)/src/proto/grpc/testing/messages.pb.cc $(GENDIR)/src/proto/grpc/testing/messages.grpc.pb.cc
 
-
+#Libinterop_client_main.a
 LIBINTEROP_CLIENT_MAIN_SRC = \
     $(GENDIR)/src/proto/grpc/testing/empty.pb.cc $(GENDIR)/src/proto/grpc/testing/empty.grpc.pb.cc \
     $(GENDIR)/src/proto/grpc/testing/messages.pb.cc $(GENDIR)/src/proto/grpc/testing/messages.grpc.pb.cc \
@@ -4291,7 +4302,7 @@ endif
 $(OBJDIR)/$(CONFIG)/test/cpp/interop/client.o: $(GENDIR)/src/proto/grpc/testing/empty.pb.cc $(GENDIR)/src/proto/grpc/testing/empty.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/messages.pb.cc $(GENDIR)/src/proto/grpc/testing/messages.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/test.pb.cc $(GENDIR)/src/proto/grpc/testing/test.grpc.pb.cc
 $(OBJDIR)/$(CONFIG)/test/cpp/interop/interop_client.o: $(GENDIR)/src/proto/grpc/testing/empty.pb.cc $(GENDIR)/src/proto/grpc/testing/empty.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/messages.pb.cc $(GENDIR)/src/proto/grpc/testing/messages.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/test.pb.cc $(GENDIR)/src/proto/grpc/testing/test.grpc.pb.cc
 
-
+#Libinterop_server_helper.a
 LIBINTEROP_SERVER_HELPER_SRC = \
     test/cpp/interop/server_helper.cc \
 
@@ -4340,7 +4351,7 @@ ifneq ($(NO_DEPS),true)
 endif
 endif
 
-
+#Libinterop_server_main.a
 LIBINTEROP_SERVER_MAIN_SRC = \
     $(GENDIR)/src/proto/grpc/testing/empty.pb.cc $(GENDIR)/src/proto/grpc/testing/empty.grpc.pb.cc \
     $(GENDIR)/src/proto/grpc/testing/messages.pb.cc $(GENDIR)/src/proto/grpc/testing/messages.grpc.pb.cc \
@@ -4393,7 +4404,7 @@ endif
 endif
 $(OBJDIR)/$(CONFIG)/test/cpp/interop/interop_server.o: $(GENDIR)/src/proto/grpc/testing/empty.pb.cc $(GENDIR)/src/proto/grpc/testing/empty.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/messages.pb.cc $(GENDIR)/src/proto/grpc/testing/messages.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/test.pb.cc $(GENDIR)/src/proto/grpc/testing/test.grpc.pb.cc
 
-
+#Libqps.a
 LIBQPS_SRC = \
     $(GENDIR)/src/proto/grpc/testing/messages.pb.cc $(GENDIR)/src/proto/grpc/testing/messages.grpc.pb.cc \
     $(GENDIR)/src/proto/grpc/testing/payloads.pb.cc $(GENDIR)/src/proto/grpc/testing/payloads.grpc.pb.cc \
@@ -4468,7 +4479,7 @@ $(OBJDIR)/$(CONFIG)/test/cpp/qps/server_sync.o: $(GENDIR)/src/proto/grpc/testing
 $(OBJDIR)/$(CONFIG)/test/cpp/qps/usage_timer.o: $(GENDIR)/src/proto/grpc/testing/messages.pb.cc $(GENDIR)/src/proto/grpc/testing/messages.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/payloads.pb.cc $(GENDIR)/src/proto/grpc/testing/payloads.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/stats.pb.cc $(GENDIR)/src/proto/grpc/testing/stats.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/control.pb.cc $(GENDIR)/src/proto/grpc/testing/control.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/services.pb.cc $(GENDIR)/src/proto/grpc/testing/services.grpc.pb.cc
 $(OBJDIR)/$(CONFIG)/test/cpp/util/benchmark_config.o: $(GENDIR)/src/proto/grpc/testing/messages.pb.cc $(GENDIR)/src/proto/grpc/testing/messages.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/payloads.pb.cc $(GENDIR)/src/proto/grpc/testing/payloads.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/stats.pb.cc $(GENDIR)/src/proto/grpc/testing/stats.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/control.pb.cc $(GENDIR)/src/proto/grpc/testing/control.grpc.pb.cc $(GENDIR)/src/proto/grpc/testing/services.pb.cc $(GENDIR)/src/proto/grpc/testing/services.grpc.pb.cc
 
-
+#Libgrpc_csharp_ext.a
 LIBGRPC_CSHARP_EXT_SRC = \
     src/csharp/ext/grpc_csharp_ext.c \
 
@@ -4525,7 +4536,7 @@ ifneq ($(NO_DEPS),true)
 endif
 endif
 
-
+#Libboringssl.a
 LIBBORINGSSL_SRC = \
     src/boringssl/err_data.c \
     third_party/boringssl/crypto/aes/aes.c \
@@ -4848,7 +4859,7 @@ ifneq ($(NO_DEPS),true)
 -include $(LIBBORINGSSL_OBJS:.o=.dep)
 endif
 
-
+#Libboringssl_test_util.a
 LIBBORINGSSL_TEST_UTIL_SRC = \
     third_party/boringssl/crypto/test/file_test.cc \
     third_party/boringssl/crypto/test/malloc.cc \
@@ -4888,7 +4899,7 @@ ifneq ($(NO_DEPS),true)
 -include $(LIBBORINGSSL_TEST_UTIL_OBJS:.o=.dep)
 endif
 
-
+#Libboringssl_aes_test_lib.a
 LIBBORINGSSL_AES_TEST_LIB_SRC = \
     third_party/boringssl/crypto/aes/aes_test.cc \
 
@@ -4926,7 +4937,7 @@ ifneq ($(NO_DEPS),true)
 -include $(LIBBORINGSSL_AES_TEST_LIB_OBJS:.o=.dep)
 endif
 
-
+#Libboringssl_asn1_test_lib.a
 LIBBORINGSSL_ASN1_TEST_LIB_SRC = \
     third_party/boringssl/crypto/asn1/asn1_test.cc \
 
