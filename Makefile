@@ -334,10 +334,14 @@ endif
 ifeq ($(SYSTEM),Linux)
 TMPOUT = /dev/null
 else
+ifeq ($(SYSTEM),Android)
+TMPOUT = /dev/null
+else
 TMPOUT = `mktemp /tmp/test-out-XXXXXX`
-endif
+endif #Android
+endif #Linux
 
-# Detect if we can use C++11
+# Detect if we can use C++11 (overriden using Android)
 CXX11_CHECK_CMD = $(CXX) -std=c++11 -o $(TMPOUT) -c test/build/c++11.cc
 HAS_CXX11 = $(shell $(CXX11_CHECK_CMD) 2> /dev/null && echo true || echo false)
 
