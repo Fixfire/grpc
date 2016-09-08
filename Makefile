@@ -2101,7 +2101,7 @@ $(OBJDIR)/$(CONFIG)/%.o : $(GENDIR)/%.pb.cc
 $(OBJDIR)/$(CONFIG)/src/compiler/%.o : src/compiler/%.cc
 	$(E) "[HOSTCXX] Compiling $<"
 	$(Q) mkdir -p `dirname $@`
-	$(Q) $(HOST_CXX) -I$(BOSP_INCLUDE_DIR) $(HOST_CXXFLAGS) $(HOST_CPPFLAGS) -MMD -MF $(addsuffix .dep, $(basename $@)) -c -o $@ $<
+	$(Q) $(HOST_CXX) -I$(BOSP_INCLUDE_DIR) $(HOST_CXXFLAGS) $(HOST_CPPFLAGS) -std=c++11 -MMD -MF $(addsuffix .dep, $(basename $@)) -c -o $@ $<
 
 $(OBJDIR)/$(CONFIG)/%.o : %.cc
 	$(E) "[CXX]     Compiling $<"
