@@ -272,6 +272,22 @@ CONFIG ?= opt
 #  https://www.gnu.org/software/make/manual/html_node/Implicit-Variables.html
 #  https://www.gnu.org/software/make/manual/html_node/Flavors.html#index-_003f_003d
 #  https://www.gnu.org/software/make/manual/html_node/Origin-Function.html
+
+# Printing information about CC and CXX origin settings for cross-compilation
+ifneq ($(CROSS_COMPILING),undefined)
+$(info #### Cross-compiling for $(SYSTEM) ###)
+$(info [CONFIG] CC origin: $(origin CC) -> $(CC))
+$(info [CONFIG] CXX origin: $(origin CXX) -> $(CXX))
+$(info [CONFIG] HOST_CC origin: $(origin HOST_CC) -> $(HOST_CC))
+$(info [CONFIG] HOST_CXX origin: $(origin HOST_CXX) -> $(HOST_CXX))
+$(info [CONFIG] LD origin: $(origin LD) -> $(LD))
+$(info [CONFIG] LDXX origin: $(origin LDXX) -> $(LDXX))
+$(info [CONFIG] HOST_LD origin: $(origin HOST_LD) -> $(HOST_LD))
+$(info [CONFIG] HOST_LDXX origin: $(origin HOST_LDXX) -> $(HOST_LDXX))
+$(info [CONFIG] AR origin: $(origin AR) -> $(AR_DEF))
+$(info [CONFIG] STRIP origin: $(origin STRIP) -> $(STRIP))
+$(info [CONFIG] RANLIB origin: $(origin RANLIB) -> $(RANLIB))
+endif
 ifeq ($(origin CC), default)
 CC = $(CC_$(CONFIG))
 endif
