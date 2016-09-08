@@ -297,25 +297,32 @@ endif
 ifeq ($(origin LD), default)
 LD = $(LD_$(CONFIG))
 endif
+ifeq ($(origin LDXX), default)
 LDXX ?= $(LDXX_$(CONFIG))
+endif
+
 ifeq ($(SYSTEM),Linux)
-ifeq ($(origin AR), default)
-AR = ar rcs
-endif
-STRIP ?= strip --strip-unneeded
+	ifeq ($(origin AR), default)
+		AR = ar rcs
+	endif
+	STRIP ?= strip --strip-unneeded
 else
-ifeq ($(SYSTEM),Darwin)
-ifeq ($(origin AR), default)
-AR = libtool -no_warning_for_no_symbols -o
-endif
-STRIP ?= strip -x
-else
-ifeq ($(origin AR), default)
-AR = ar rcs
-endif
-STRIP ?= strip
-endif
-endif
+	ifeq ($(SYSTEM),Darwin)
+		ifeq ($(origin AR), default)
+			AR = libtool -no_warning_for_no_symbols -o
+		endif
+		STRIP ?= strip -x
+	else
+		ifeq ($(SYSTEM),Android)
+			AR = $(AR_DEF) rcs
+		else
+			ifeq ($(origin AR), default)
+				AR = ar rcs
+			endif
+			STRIP ?= strip
+		endif #Android
+	endif #Darwin
+endif #Linux
 INSTALL ?= install
 RM ?= rm -f
 PKG_CONFIG ?= pkg-config
