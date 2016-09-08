@@ -531,9 +531,13 @@ CACHE_MK += HAS_SYSTEM_PERFTOOLS = true,
 endif
 endif
 
-#HAS_SYSTEM_PROTOBUF_VERIFY = $(shell $(PROTOBUF_CHECK_CMD) 2> /dev/null && echo true || echo false)
+ifneq ($(SYSTEM),Android)
+HAS_SYSTEM_PROTOBUF_VERIFY = $(shell $(PROTOBUF_CHECK_CMD) 2> /dev/null && echo true || echo false)
+endif
 ifndef REQUIRE_CUSTOM_LIBRARIES_$(CONFIG)
-#HAS_SYSTEM_OPENSSL_ALPN ?= $(shell $(OPENSSL_ALPN_CHECK_CMD) 2> /dev/null && echo true || echo false)
+ifneq ($(SYSTEM),Android)
+HAS_SYSTEM_OPENSSL_ALPN ?= $(shell $(OPENSSL_ALPN_CHECK_CMD) 2> /dev/null && echo true || echo false)
+endif
 # Forcing gRPC to use the embedded version of openssl
 HAS_SYSTEM_OPENSSL_ALPN = false
 ifeq ($(HAS_SYSTEM_OPENSSL_ALPN),true)
@@ -545,7 +549,9 @@ endif
 ifeq ($(HAS_SYSTEM_OPENSSL_NPN),true)
 CACHE_MK += HAS_SYSTEM_OPENSSL_NPN = true,
 endif
-#HAS_SYSTEM_ZLIB ?= $(shell $(ZLIB_CHECK_CMD) 2> /dev/null && echo true || echo false)
+ifneq ($(SYSTEM),Android)
+HAS_SYSTEM_ZLIB ?= $(shell $(ZLIB_CHECK_CMD) 2> /dev/null && echo true || echo false)
+endif
 HAS_SYSTEM_ZLIB = false
 ifeq ($(HAS_SYSTEM_ZLIB),true)
 CACHE_MK += HAS_SYSTEM_ZLIB = true,
