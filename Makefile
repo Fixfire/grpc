@@ -428,7 +428,7 @@ endif
 
 ifeq ($(SYSTEM),Linux)
 LIBS = dl rt m pthread
-LDFLAGS += -pthread
+#LDFLAGS += -pthread
 endif
 
 ifeq ($(SYSTEM),MINGW32)
@@ -1188,8 +1188,10 @@ third_party/protobuf/configure:
 
 $(LIBDIR)/$(CONFIG)/protobuf/libprotobuf.a: third_party/protobuf/configure
 	$(E) "[MAKE]    Building protobuf"
-	$(Q)(cd third_party/protobuf ; CC="$(CC)" CXX="$(CXX)" LDFLAGS="$(LDFLAGS_$(CONFIG)) -g $(PROTOBUF_LDFLAGS_EXTRA)" CPPFLAGS="$(PIC_CPPFLAGS) $(CPPFLAGS_$(CONFIG)) -g $(PROTOBUF_CPPFLAGS_EXTRA)" ./configure --disable-shared --enable-static)
+	$(Q)(cd third_party/protobuf ; CC="$(CC)" CXX="$(CXX)" LDFLAGS="$(LDFLAGS_$(CONFIG)) -g $(PROTOBUF_LDFLAGS_EXTRA) " CPPFLAGS="$(PIC_CPPFLAGS) $(CPPFLAGS_$(CONFIG)) -g $(PROTOBUF_CPPFLAGS_EXTRA)" ./configure --disable-shared --enable-static --target arm --host x86_64 --build arm)
+	$(E) "Protobuf Clean"
 	$(Q)$(MAKE) -C third_party/protobuf clean
+	$(E) "Protobuf Make"
 	$(Q)$(MAKE) -C third_party/protobuf
 	$(Q)mkdir -p $(LIBDIR)/$(CONFIG)/protobuf
 	$(Q)mkdir -p $(BINDIR)/$(CONFIG)/protobuf
@@ -2466,6 +2468,10 @@ $(LIBDIR)/$(CONFIG)/libgpr.a: $(ZLIB_DEP)  $(LIBGPR_OBJS)
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libgpr.a
 endif
+ifeq ($(SYSTEM),Android)
+	$(E) "[RANLIB]	Running on $@"
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgpr.a
+endif
 
 
 
@@ -2508,7 +2514,10 @@ $(LIBDIR)/$(CONFIG)/libgpr_test_util.a: $(ZLIB_DEP)  $(LIBGPR_TEST_UTIL_OBJS)
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libgpr_test_util.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(E) "[RANLIB]	Running on $@"
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgpr_test_util.a
+endif
 
 
 
@@ -2517,7 +2526,6 @@ ifneq ($(NO_DEPS),true)
 endif
 
 #Libgrpc.a
-
 LIBGRPC_SRC = \
     src/core/lib/surface/init.c \
     src/core/lib/channel/channel_args.c \
@@ -2760,6 +2768,10 @@ $(LIBDIR)/$(CONFIG)/libgrpc.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(LIBGRPC_OBJS)  $(LIB
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libgrpc.a
 endif
+ifeq ($(SYSTEM),Android)
+	$(E) "[RANLIB]	Running on $@"
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgrpc.a
+endif
 
 
 
@@ -2775,6 +2787,9 @@ $(LIBDIR)/$(CONFIG)/libgrpc$(SHARED_VERSION).$(SHARED_EXT): $(LIBGRPC_OBJS)  $(Z
 ifeq ($(SYSTEM),Darwin)
 	$(Q) $(LD) $(LDFLAGS) -L$(LIBDIR)/$(CONFIG) -install_name $(SHARED_PREFIX)grpc$(SHARED_VERSION).$(SHARED_EXT) -dynamiclib -o $(LIBDIR)/$(CONFIG)/libgrpc$(SHARED_VERSION).$(SHARED_EXT) $(LIBGRPC_OBJS) $(LDLIBS) $(LIBDIR)/$(CONFIG)/libgpr.a $(OPENSSL_MERGE_LIBS) $(LDLIBS_SECURE) $(ZLIB_MERGE_LIBS)
 else
+#TODO: Fallisce qui
+	$(E) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgpr.a
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgpr.a
 	$(Q) $(LD) $(LDFLAGS) -L$(LIBDIR)/$(CONFIG) -shared -o $(LIBDIR)/$(CONFIG)/libgrpc$(SHARED_VERSION).$(SHARED_EXT) $(LIBGRPC_OBJS) $(LDLIBS) $(LIBDIR)/$(CONFIG)/libgpr.a $(OPENSSL_MERGE_LIBS) $(LDLIBS_SECURE) $(ZLIB_MERGE_LIBS)
 	$(Q) ln -sf $(SHARED_PREFIX)grpc$(SHARED_VERSION).$(SHARED_EXT) $(LIBDIR)/$(CONFIG)/libgrpc$(SHARED_VERSION).so.1
 	$(Q) ln -sf $(SHARED_PREFIX)grpc$(SHARED_VERSION).$(SHARED_EXT) $(LIBDIR)/$(CONFIG)/libgrpc$(SHARED_VERSION).so
@@ -3009,7 +3024,9 @@ $(LIBDIR)/$(CONFIG)/libgrpc_cronet.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(LIBGRPC_CRONE
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libgrpc_cronet.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgrpc_cronet.a
+endif
 
 
 ifeq ($(SYSTEM),MINGW32)
@@ -3081,7 +3098,9 @@ $(LIBDIR)/$(CONFIG)/libgrpc_test_util.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(LIBGRPC_TE
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libgrpc_test_util.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgrpc_test_util.a
+endif
 
 
 
@@ -3330,7 +3349,9 @@ $(LIBDIR)/$(CONFIG)/libgrpc_unsecure.a: $(ZLIB_DEP)  $(LIBGRPC_UNSECURE_OBJS)  $
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libgrpc_unsecure.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgrpc_unsecure.a
+endif
 
 
 ifeq ($(SYSTEM),MINGW32)
@@ -3382,6 +3403,9 @@ $(LIBDIR)/$(CONFIG)/libreconnect_server.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(LIBRECON
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libreconnect_server.a
 endif
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libreconnect_server.a
+endif
 
 
 
@@ -3420,6 +3444,9 @@ $(LIBDIR)/$(CONFIG)/libtest_tcp_server.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(LIBTEST_T
 	$(Q) $(AR) $(LIBDIR)/$(CONFIG)/libtest_tcp_server.a $(LIBTEST_TCP_SERVER_OBJS) 
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libtest_tcp_server.a
+endif
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libtest_tcp_server.a
 endif
 
 
@@ -3600,6 +3627,9 @@ $(LIBDIR)/$(CONFIG)/libgrpc++.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(PROTOBUF_DEP) $(LI
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libgrpc++.a
 endif
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgrpc++.a
+endif
 
 
 
@@ -3727,7 +3757,9 @@ $(LIBDIR)/$(CONFIG)/libgrpc++_reflection.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(PROTOBU
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libgrpc++_reflection.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgrpc++_reflection.a
+endif
 
 
 ifeq ($(SYSTEM),MINGW32)
@@ -3793,7 +3825,9 @@ $(LIBDIR)/$(CONFIG)/libgrpc++_test_config.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(PROTOB
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libgrpc++_test_config.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgrpc++_test_config.a
+endif
 
 
 
@@ -3904,7 +3938,9 @@ $(LIBDIR)/$(CONFIG)/libgrpc++_test_util.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(PROTOBUF
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libgrpc++_test_util.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgrpc++_test_util.a
+endif
 
 
 
@@ -4077,7 +4113,9 @@ $(LIBDIR)/$(CONFIG)/libgrpc++_unsecure.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $(LIBGRPC
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libgrpc++_unsecure.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgrpc++_unsecure.a
+endif
 
 
 ifeq ($(SYSTEM),MINGW32)
@@ -4140,7 +4178,9 @@ $(LIBDIR)/$(CONFIG)/libgrpc_cli_libs.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(PROTOBUF_DE
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libgrpc_cli_libs.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgrpc_cli_libs.a
+endif
 
 
 
@@ -4186,7 +4226,9 @@ $(LIBDIR)/$(CONFIG)/libgrpc_plugin_support.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $(LIB
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libgrpc_plugin_support.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgrpc_plugin_support.a
+endif
 
 
 
@@ -4232,7 +4274,9 @@ $(LIBDIR)/$(CONFIG)/libinterop_client_helper.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(PRO
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libinterop_client_helper.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libinterop_client_helper.a
+endif
 
 
 
@@ -4286,7 +4330,9 @@ $(LIBDIR)/$(CONFIG)/libinterop_client_main.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(PROTO
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libinterop_client_main.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libinterop_client_main.a
+endif
 
 
 
@@ -4337,7 +4383,9 @@ $(LIBDIR)/$(CONFIG)/libinterop_server_helper.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(PRO
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libinterop_server_helper.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libinterop_server_helper.a
+endif
 
 
 
@@ -4389,7 +4437,9 @@ $(LIBDIR)/$(CONFIG)/libinterop_server_main.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(PROTO
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libinterop_server_main.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libinterop_server_main.a
+endif
 
 
 
@@ -4454,6 +4504,9 @@ $(LIBDIR)/$(CONFIG)/libqps.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(PROTOBUF_DEP) $(LIBQP
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libqps.a
 endif
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libqps.a
+endif
 
 
 
@@ -4507,7 +4560,9 @@ $(LIBDIR)/$(CONFIG)/libgrpc_csharp_ext.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(LIBGRPC_C
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libgrpc_csharp_ext.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libgrpc_csharp_ext.a
+endif
 
 
 ifeq ($(SYSTEM),MINGW32)
@@ -4851,7 +4906,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl.a: $(ZLIB_DEP)  $(LIBBORINGSSL_OBJS)
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl.a
+endif
 
 
 
@@ -4889,7 +4946,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_test_util.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $(LIB
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_test_util.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_test_util.a
+endif
 
 
 
@@ -4927,7 +4986,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_aes_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $(
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_aes_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_aes_test_lib.a
+endif
 
 
 
@@ -4965,7 +5026,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_asn1_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_asn1_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_asn1_test_lib.a
+endif
 
 
 
@@ -5003,7 +5066,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_base64_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP)
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_base64_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_base64_test_lib.a
+endif
 
 
 
@@ -5041,7 +5106,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_bio_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $(
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_bio_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_bio_test_lib.a
+endif
 
 
 
@@ -5079,7 +5146,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_bn_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $(L
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_bn_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_bn_test_lib.a
+endif
 
 
 
@@ -5117,7 +5186,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_bytestring_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_bytestring_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_bytestring_test_lib.a
+endif
 
 
 
@@ -5155,7 +5226,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_aead_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_aead_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_aead_test_lib.a
+endif
 
 
 
@@ -5193,7 +5266,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_cipher_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP)
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_cipher_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_cipher_test_lib.a
+endif
 
 
 
@@ -5231,7 +5306,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_cmac_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_cmac_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_cmac_test_lib.a
+endif
 
 
 
@@ -5260,7 +5337,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_constant_time_test_lib.a: $(ZLIB_DEP)  $(LIBBOR
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_constant_time_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_constant_time_test_lib.a
+endif
 
 
 
@@ -5296,7 +5375,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_ed25519_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_ed25519_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_ed25519_test_lib.a
+endif
 
 
 
@@ -5334,7 +5415,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_x25519_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP)
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_x25519_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_x25519_test_lib.a
+endif
 
 
 
@@ -5372,7 +5455,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_dh_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $(L
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_dh_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_dh_test_lib.a
+endif
 
 
 
@@ -5410,7 +5495,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_digest_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP)
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_digest_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_digest_test_lib.a
+endif
 
 
 
@@ -5439,7 +5526,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_dsa_test_lib.a: $(ZLIB_DEP)  $(LIBBORINGSSL_DSA
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_dsa_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_dsa_test_lib.a
+endif
 
 
 
@@ -5475,7 +5564,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_ec_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $(L
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_ec_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_ec_test_lib.a
+endif
 
 
 
@@ -5504,7 +5595,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_example_mul_lib.a: $(ZLIB_DEP)  $(LIBBORINGSSL_
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_example_mul_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_example_mul_lib.a
+endif
 
 
 
@@ -5540,7 +5633,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_ecdsa_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) 
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_ecdsa_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_ecdsa_test_lib.a
+endif
 
 
 
@@ -5577,6 +5672,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_err_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $(
 	$(Q) $(AR) $(LIBDIR)/$(CONFIG)/libboringssl_err_test_lib.a $(LIBBORINGSSL_ERR_TEST_LIB_OBJS) 
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_err_test_lib.a
+endif
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_err_test_lib.a
 endif
 
 
@@ -5616,7 +5714,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_evp_extra_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_D
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_evp_extra_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_evp_extra_test_lib.a
+endif
 
 
 
@@ -5654,7 +5754,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_evp_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $(
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_evp_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_evp_test_lib.a
+endif
 
 
 
@@ -5692,7 +5794,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_pbkdf_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) 
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_pbkdf_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_pbkdf_test_lib.a
+endif
 
 
 
@@ -5721,7 +5825,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_hkdf_test_lib.a: $(ZLIB_DEP)  $(LIBBORINGSSL_HK
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_hkdf_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_hkdf_test_lib.a
+endif
 
 
 
@@ -5757,7 +5863,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_hmac_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_hmac_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_hmac_test_lib.a
+endif
 
 
 
@@ -5786,7 +5894,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_lhash_test_lib.a: $(ZLIB_DEP)  $(LIBBORINGSSL_L
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_lhash_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_lhash_test_lib.a
+endif
 
 
 
@@ -5849,7 +5959,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_pkcs12_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP)
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_pkcs12_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_pkcs12_test_lib.a
+endif
 
 
 
@@ -5887,7 +5999,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_pkcs8_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) 
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_pkcs8_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_pkcs8_test_lib.a
+endif
 
 
 
@@ -5925,7 +6039,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_poly1305_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DE
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_poly1305_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_poly1305_test_lib.a
+endif
 
 
 
@@ -5954,7 +6070,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_refcount_test_lib.a: $(ZLIB_DEP)  $(LIBBORINGSS
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_refcount_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_refcount_test_lib.a
+endif
 
 
 
@@ -5990,7 +6108,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_rsa_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $(
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_rsa_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_rsa_test_lib.a
+endif
 
 
 
@@ -6019,7 +6139,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_thread_test_lib.a: $(ZLIB_DEP)  $(LIBBORINGSSL_
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_thread_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_thread_test_lib.a
+endif
 
 
 
@@ -6046,7 +6168,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_pkcs7_test_lib.a: $(ZLIB_DEP)  $(LIBBORINGSSL_P
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_pkcs7_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_pkcs7_test_lib.a
+endif
 
 
 
@@ -6082,7 +6206,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_x509_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_x509_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_x509_test_lib.a
+endif
 
 
 
@@ -6111,7 +6237,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_tab_test_lib.a: $(ZLIB_DEP)  $(LIBBORINGSSL_TAB
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_tab_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_tab_test_lib.a
+endif
 
 
 
@@ -6138,7 +6266,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_v3name_test_lib.a: $(ZLIB_DEP)  $(LIBBORINGSSL_
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_v3name_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_v3name_test_lib.a
+endif
 
 
 
@@ -6165,7 +6295,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_pqueue_test_lib.a: $(ZLIB_DEP)  $(LIBBORINGSSL_
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_pqueue_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_pqueue_test_lib.a
+endif
 
 
 
@@ -6201,7 +6333,9 @@ $(LIBDIR)/$(CONFIG)/libboringssl_ssl_test_lib.a: $(ZLIB_DEP)  $(PROTOBUF_DEP) $(
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libboringssl_ssl_test_lib.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libboringssl_ssl_test_lib.a
+endif
 
 
 
@@ -6243,7 +6377,12 @@ $(LIBDIR)/$(CONFIG)/libz.a:  $(LIBZ_OBJS)
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libz.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libz.a
+endif
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libz.a
+endif
 
 
 
@@ -6278,7 +6417,9 @@ $(LIBDIR)/$(CONFIG)/libbad_client_test.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(LIBBAD_CL
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libbad_client_test.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libbad_client_test.a
+endif
 
 
 
@@ -6317,7 +6458,9 @@ $(LIBDIR)/$(CONFIG)/libbad_ssl_test_server.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(LIBBA
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libbad_ssl_test_server.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libbad_ssl_test_server.a
+endif
 
 
 
@@ -6396,7 +6539,9 @@ $(LIBDIR)/$(CONFIG)/libend2end_tests.a: $(ZLIB_DEP) $(OPENSSL_DEP) $(LIBEND2END_
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libend2end_tests.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libend2end_tests.a
+endif
 
 
 
@@ -6464,7 +6609,9 @@ $(LIBDIR)/$(CONFIG)/libend2end_nosec_tests.a: $(ZLIB_DEP)  $(LIBEND2END_NOSEC_TE
 ifeq ($(SYSTEM),Darwin)
 	$(Q) ranlib -no_warning_for_no_symbols $(LIBDIR)/$(CONFIG)/libend2end_nosec_tests.a
 endif
-
+ifeq ($(SYSTEM),Android)
+	$(Q) $(RANLIB) $(LIBDIR)/$(CONFIG)/libend2end_nosec_tests.a
+endif
 
 
 
@@ -6472,7 +6619,7 @@ ifneq ($(NO_DEPS),true)
 -include $(LIBEND2END_NOSEC_TESTS_OBJS:.o=.dep)
 endif
 
-
+# LINKINKG
 
 # All of the test targets, and protoc plugins
 
